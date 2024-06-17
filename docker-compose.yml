@@ -1,0 +1,47 @@
+services:
+  nginx:
+    build: containers/nginx
+    restart: on-failure
+    volumes:
+      - ./containers/backend/src:/var/www
+    ports:
+      - "80:80"
+      - "443:443"
+    networks:
+      - myAppNetwork
+    depends_on:
+      - backend
+
+  backend:
+    build: containers/backend
+    restart: on-failure
+    platform: linux/amd64
+    volumes:
+      - ./containers/backend/files:/files
+      - ./containers/backend/src:/var/www
+    expose:
+      - 9000
+    networks:
+      - myAppNetwork
+    depends_on:
+      - mysql
+
+  mysql:
+    build: containers/mysql
+    restart: on-failure
+    environment:
+      - MYSQL_USER=user
+      - MYSQL_PASSWORD=password
+      - MYSQL_DATABASE=myApp
+      - MYSQL_ROOT_PASSWORD=rootPassword
+    volumes:
+      - ./containers/mysql/files/var:/var/lib/mysql
+    expose:
+      - 3306
+    networks:
+      - myAppNetwork
+
+networks:
+  myAppNetwork:
+    driver: bridge
+    enable_ipv6: false
